@@ -41,13 +41,16 @@ func flush(storages []mcstorage.Storage){
 	for _,storage:=range storages{
 		storage.FlushAll()
 	}
-
 }
 
 func TestAddRemoveActivities(t *testing.T) {
 	redisStorage:=newRedisStorage()
 	redisListStorage:=newRedisListStorage()
 	redisCounterStorage:=newRedisCounterStorage()
+	storages:=make([]mcstorage.Storage,3)
+	storages[0]=redisStorage
+	storages[1]=redisListStorage
+	storages[2]=redisCounterStorage
 
 	feed:=BaseFeed{redisStorage,redisListStorage,redisCounterStorage,"fanngyuan"}
 	activity:=activity.Activity{uint64(1),"new note"}
@@ -64,4 +67,5 @@ func TestAddRemoveActivities(t *testing.T) {
 		t.Error("Type should be T")
 	}
 
+	flush(storages)
 }

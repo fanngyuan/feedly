@@ -7,26 +7,14 @@ import (
 	"github.com/fanngyuan/feedly/activity"
 )
 
-type T struct {
-	A int
-}
-
-func (this T)GetId()uint64{
-	return uint64(this.A)
-}
-
-func (this T)GetType()string{
-	return "T"
-}
-
 func newRedisListStorage()mcstorage.RedisListStorage{
 	redisListStorage,_ := mcstorage.NewRedisListStorage(":6379", "test_list", 0, mcstorage.DecodeIntReversedSlice)
 	return redisListStorage
 }
 
 func newRedisStorage()mcstorage.RedisStorage{
-	tt := T{1}
-	jsonEncoding:=mcstorage.JsonEncoding{reflect.TypeOf(&tt)}
+	activity:=activity.Activity{uint64(1),"new note"}
+	jsonEncoding:=mcstorage.JsonEncoding{reflect.TypeOf(activity)}
 	redisStorage,_ := mcstorage.NewRedisStorage(":6379", "test", 0, jsonEncoding)
 	return redisStorage
 }
@@ -53,18 +41,76 @@ func TestAddRemoveActivities(t *testing.T) {
 	storages[2]=redisCounterStorage
 
 	feed:=BaseFeed{redisStorage,redisListStorage,redisCounterStorage,"fanngyuan"}
-	activity:=activity.Activity{uint64(1),"new note"}
-	feed.AddActivity(activity)
+	activity1:=activity.Activity{uint64(1),"new note"}
+	feed.AddActivity(activity1)
 
 	result:=feed.GetActivities(int64(0),int64(0),1,10)
 	if len(result)!=1{
 		t.Error("len should be 1")
 	}
-	if result[0].GetId()!=0{
-		t.Error("id should be 0")
+	if result[0].GetId()!=1{
+		t.Error("id should be 1")
 	}
-	if result[0].GetType()!="T"{
-		t.Error("Type should be T")
+	count:=feed.GetCount()
+	if count!=1{
+		t.Error("count should be 1")
+	}
+
+	activity2:=activity.Activity{uint64(2),"new note"}
+	feed.AddActivity(activity2)
+
+	result=feed.GetActivities(int64(0),int64(0),1,10)
+	if len(result)!=2{
+		t.Error("len should be 2")
+	}
+	if result[0].GetId()!=2{
+		t.Error("id should be 2")
+	}
+	if result[1].GetId()!=1{
+		t.Error("id should be 1")
+	}
+	count=feed.GetCount()
+	if count!=2{
+		t.Error("count should be 2")
+	}
+
+	activity3:=activity.Activity{uint64(3),"new note"}
+	feed.AddActivity(activity3)
+
+	result=feed.GetActivities(int64(0),int64(0),1,10)
+
+	if len(result)!=3{
+		t.Error("len should be 3")
+	}
+	if result[0].GetId()!=3{
+		t.Error("id should be 3")
+	}
+	if result[1].GetId()!=2{
+		t.Error("id should be 2")
+	}
+	if result[2].GetId()!=1{
+		t.Error("id should be 1")
+	}
+	count=feed.GetCount()
+	if count!=3{
+		t.Error("count should be 3")
+	}
+
+	feed.RemoveActivity(activity2)
+	result=feed.GetActivities(int64(0),int64(0),1,10)
+
+	if len(result)!=2{
+		t.Error("len should be 2")
+	}
+	if result[0].GetId()!=3{
+		t.Error("id should be 3")
+	}
+	if result[1].GetId()!=1{
+		t.Error("id should be 1")
+	}
+	count=feed.GetCount()
+	if count!=2{
+		t.Error("count should be 2")
 	}
 
 	flush(storages)

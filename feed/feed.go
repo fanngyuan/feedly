@@ -60,7 +60,7 @@ func (this BaseFeed) RemoveActivities(activities []activity.Activable){
 	}
 }
 
-func (this BaseFeed) GetActivities(sinceId ,maxId int64,page ,count int)[]activity.Activable{
+func (this BaseFeed) GetActivities(sinceId ,maxId uint64,page ,count int)[]activity.Activable{
 	ids,err:=this.TimelimeStorage.Getlimit(this.GetId(),sinceId,maxId,page,count)
 	if err!=nil{
 		return nil

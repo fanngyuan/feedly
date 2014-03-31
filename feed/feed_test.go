@@ -44,7 +44,7 @@ func TestAddRemoveActivities(t *testing.T) {
 	activity1:=activity.Activity{uint64(1),"new note"}
 	feed.AddActivity(activity1)
 
-	result:=feed.GetActivities(int64(0),int64(0),1,10)
+	result:=feed.GetActivities(uint64(0),uint64(0),1,10)
 	if len(result)!=1{
 		t.Error("len should be 1")
 	}
@@ -59,7 +59,7 @@ func TestAddRemoveActivities(t *testing.T) {
 	activity2:=activity.Activity{uint64(2),"new note"}
 	feed.AddActivity(activity2)
 
-	result=feed.GetActivities(int64(0),int64(0),1,10)
+	result=feed.GetActivities(uint64(0),uint64(0),1,10)
 	if len(result)!=2{
 		t.Error("len should be 2")
 	}
@@ -77,7 +77,7 @@ func TestAddRemoveActivities(t *testing.T) {
 	activity3:=activity.Activity{uint64(3),"new note"}
 	feed.AddActivity(activity3)
 
-	result=feed.GetActivities(int64(0),int64(0),1,10)
+	result=feed.GetActivities(uint64(0),uint64(0),1,10)
 
 	if len(result)!=3{
 		t.Error("len should be 3")
@@ -97,7 +97,7 @@ func TestAddRemoveActivities(t *testing.T) {
 	}
 
 	feed.RemoveActivity(activity2)
-	result=feed.GetActivities(int64(0),int64(0),1,10)
+	result=feed.GetActivities(uint64(0),uint64(0),1,10)
 
 	if len(result)!=2{
 		t.Error("len should be 2")

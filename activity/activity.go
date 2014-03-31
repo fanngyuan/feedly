@@ -21,6 +21,7 @@ func (this Activity) GetType()string{
 type FollowActivity struct{
 	FollowId uint64
 	UserId uint64
+	TargetId uint64
 	Type string
 }
 

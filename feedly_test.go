@@ -17,8 +17,8 @@ func newUserRedisStorage()mcstorage.RedisStorage{
 	return redisStorage
 }
 
-func newRedisListStorage()mcstorage.RedisListStorage{
-	redisListStorage,_ := mcstorage.NewRedisListStorage(":6379", "test_list", 0, mcstorage.DecodeIntReversedSlice)
+func newRedisListStorage(userId uint64)mcstorage.RedisListStorage{
+	redisListStorage,_ := mcstorage.NewRedisListStorage(":6379", "test_list_"+strconv.Itoa(int(userId)), 0, mcstorage.DecodeIntReversedSlice)
 	return redisListStorage
 }
 
@@ -74,7 +74,7 @@ type ActivityFeedInit struct{
 
 func (this ActivityFeedInit) InitUserFeed(userId uint64)feed.UserFeed{
 	redisStorage:=newRedisStorage()
-	redisListStorage:=newRedisListStorage()
+	redisListStorage:=newRedisListStorage(userId)
 	redisCounterStorage:=newRedisCounterStorage()
 	redisFollowStorage:=newRedisFollowStorage()
 
@@ -205,6 +205,73 @@ func TestAddRemoveActiviy(t *testing.T) {
 		t.Errorf("last one should be 4 ,result is ",activities)
 	}
 	if activities[2].GetId()!=1{
+		t.Errorf("last one should be 1 ,result is ",activities)
+	}
+
+	flush(userRedisStorage)
+}
+
+func TestPullAggregator(t *testing.T) {
+	userRedisStorage:=newUserRedisStorage()
+	zero:=int64(0)
+	idgen:=id.IdGenerator{&zero}
+	userFeedMap:=make(map[uint64] feed.UserFeed)
+
+	aggregateFeed:=AggregatorFeed{userFeedMap,idgen,userRedisStorage,ActivityFeedInit{}}
+
+
+	redisStorage:=newRedisStorage()
+	redisCounterStorage:=newRedisCounterStorage()
+
+	statusFeed:=feed.BaseFeed{redisStorage,nil,redisCounterStorage,"status"}
+	activityFeedMap:=make(map[string] feed.Feedable)
+	activityFeedMap["status"]=statusFeed
+
+	pullAggregateFeed:=PullAgrregatorFeed{aggregateFeed,activityFeedMap}
+
+	userIds:=make([]uint64,20)
+	for i:=1;i<=20;i++{
+		userIds[i-1]=uint64(i)
+	}
+	addUsers(userRedisStorage,userIds)
+
+	aggregateFeed.Follow(uint64(1),uint64(2))
+	aggregateFeed.Follow(uint64(1),uint64(3))
+
+	activity1:=activity.Activity{uint64(1),"status"}
+	activity2:=activity.Activity{uint64(2),"status"}
+	activity3:=activity.Activity{uint64(3),"status"}
+	activity4:=activity.Activity{uint64(4),"status"}
+
+	aggregateFeed.AddActivity(uint64(2),activity1)
+	aggregateFeed.AddActivity(uint64(3),activity2)
+	aggregateFeed.AddActivity(uint64(2),activity3)
+	aggregateFeed.AddActivity(uint64(3),activity4)
+
+	activities:=pullAggregateFeed.GetFriendsTimeline(uint64(1),"status",uint64(0),uint64(0),1,20)
+	if len(activities)!=4{
+		t.Errorf("length of users should be 4 result is ",len(activities))
+	}
+	if activities[0].GetId()!=4{
+		t.Errorf("last one should be 4 ,result is ",activities)
+	}
+	if activities[3].GetId()!=1{
+		t.Errorf("last one should be 1 ,result is ",activities)
+	}
+
+	activity5:=activity.Activity{uint64(5),"status"}
+	activity6:=activity.Activity{uint64(6),"status"}
+	aggregateFeed.AddActivity(uint64(1),activity5)
+	aggregateFeed.AddActivity(uint64(1),activity6)
+
+	activities=pullAggregateFeed.GetHomeTimeline(uint64(1),"status",uint64(0),uint64(0),1,20)
+	if len(activities)!=6{
+		t.Errorf("length of users should be 6 result is ",len(activities))
+	}
+	if activities[0].GetId()!=6{
+		t.Errorf("last one should be 4 ,result is ",activities)
+	}
+	if activities[5].GetId()!=1{
 		t.Errorf("last one should be 1 ,result is ",activities)
 	}
 

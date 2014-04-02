@@ -12,6 +12,8 @@ type Feedable interface{
 	RemoveActivity(activity activity.Activable)
 	RemoveActivities(activities []activity.Activable)
 	GetActivities(sinceId ,maxId uint64,page ,count int)[]activity.Activable
+	GetActivityIds(sinceId ,maxId uint64,page ,count int)[]uint64
+	MultiGet(ids []uint64)[]activity.Activable
 	GetCount()int
 	GetId()string
 }
@@ -70,6 +72,36 @@ func (this BaseFeed) GetActivities(sinceId ,maxId uint64,page ,count int)[]activ
 		keys=append(keys,strconv.Itoa(id))
 	}
 	values,err:=this.ActivityStorage.MultiGet(keys)
+	result:=make([]activity.Activable,len(values))
+	i:=0
+	for _,value := range(values){
+		result[i]=value.(activity.Activable)
+		i=i+1
+	}
+	return result
+}
+
+func (this BaseFeed) GetActivityIds(sinceId ,maxId uint64,page ,count int)[]uint64{
+	ids,err:=this.TimelimeStorage.Getlimit(this.GetId(),sinceId,maxId,page,count)
+	if err!=nil{
+		return nil
+	}
+	result:=make([]uint64,ids.(IntReversedSlice).Len())
+	for i,id :=range(ids.(IntReversedSlice)){
+		result[i]=uint64(id)
+	}
+	return result
+}
+
+func (this BaseFeed) MultiGet(ids []uint64)[]activity.Activable{
+	var keys []interface{}
+	for _,id :=range ids {
+		keys=append(keys,strconv.Itoa(int(id)))
+	}
+	values,err:=this.ActivityStorage.MultiGet(keys)
+	if err!=nil{
+		return make([]activity.Activable,0)
+	}
 	result:=make([]activity.Activable,len(values))
 	i:=0
 	for _,value := range(values){

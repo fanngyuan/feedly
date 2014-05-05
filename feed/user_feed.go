@@ -29,30 +29,30 @@ type UserFeed struct{
 }
 
 func (this UserFeed) Follow(followActivity activity.FollowActivity){
-	this.FollowIdStorage.Set(strconv.Itoa(int(followActivity.TargetId)),followActivity.GetId())
+	this.FollowIdStorage.Set(mcstorage.String(strconv.Itoa(int(followActivity.TargetId))),followActivity.GetId())
 	this.FollowingFeed.AddActivity(followActivity)
 }
 
 func (this UserFeed) Unfollow(unfollowActivity activity.FollowActivity){
 	if unfollowActivity.GetId()==0{
-		followId,_:=this.FollowIdStorage.Get(strconv.Itoa(int(unfollowActivity.TargetId)))
+		followId,_:=this.FollowIdStorage.Get(mcstorage.String(strconv.Itoa(int(unfollowActivity.TargetId))))
 		unfollowActivity.FollowId = uint64(followId.(int))
 	}
-	this.FollowIdStorage.Delete(strconv.Itoa(int(unfollowActivity.TargetId)))
+	this.FollowIdStorage.Delete(mcstorage.String(strconv.Itoa(int(unfollowActivity.TargetId))))
 	this.FollowingFeed.RemoveActivity(unfollowActivity)
 }
 
 func (this UserFeed) AddFollower(followActivity activity.FollowActivity){
-	this.FollowerIdStorage.Set(strconv.Itoa(int(followActivity.UserId)),followActivity.GetId())
+	this.FollowerIdStorage.Set(mcstorage.String(strconv.Itoa(int(followActivity.UserId))),followActivity.GetId())
 	this.FollowerFeed.AddActivity(followActivity)
 }
 
 func (this UserFeed) RemoveFollower(unfollowActivity activity.FollowActivity){
 	if unfollowActivity.GetId()==0{
-		followId,_:=this.FollowerIdStorage.Get(strconv.Itoa(int(unfollowActivity.UserId)))
+		followId,_:=this.FollowerIdStorage.Get(mcstorage.String(strconv.Itoa(int(unfollowActivity.UserId))))
 		unfollowActivity.FollowId = uint64(followId.(int))
 	}
-	this.FollowerIdStorage.Delete(strconv.Itoa(int(unfollowActivity.UserId)))
+	this.FollowerIdStorage.Delete(mcstorage.String(strconv.Itoa(int(unfollowActivity.UserId))))
 	this.FollowerFeed.RemoveActivity(unfollowActivity)
 }
 

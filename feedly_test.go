@@ -58,7 +58,7 @@ func addUsers(storage mcstorage.Storage,userIds []uint64)[]User{
 	users:=make([]User,len(userIds))
 	for i,userId := range userIds{
 		user:=User{userId}
-		storage.Set(strconv.Itoa(int(userId)),user)
+		storage.Set(mcstorage.String(strconv.Itoa(int(userId))),user)
 		users[i]=user
 	}
 	return users

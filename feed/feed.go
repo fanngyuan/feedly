@@ -30,30 +30,30 @@ func (this BaseFeed) GetId()string{
 }
 
 func (this BaseFeed) AddActivity(activity activity.Activable){
-	activityKey:=strconv.Itoa(int(activity.GetId()))
+	activityKey:=String(strconv.Itoa(int(activity.GetId())))
 	this.ActivityStorage.Set(activityKey,activity)
-	this.TimelimeStorage.AddItem(this.GetId(),activity.GetId())
-	this.CounterStorage.Incr(this.GetId(),1)
+	this.TimelimeStorage.AddItem(String(this.GetId()),activity.GetId())
+	this.CounterStorage.Incr(String(this.GetId()),1)
 }
 
 func (this BaseFeed) AddActivities(activities []activity.Activable){
-	activityMap:=make(map[interface{}] interface{})
+	activityMap:=make(map[Key] interface{})
 	ids:=make([]uint64,len(activities))
 	for i,activity := range activities{
-		key:=strconv.Itoa(int(activity.GetId()))
+		key:=String(strconv.Itoa(int(activity.GetId())))
 		activityMap[key]=activity
 		ids[i]=activity.GetId()
 	}
 	this.ActivityStorage.MultiSet(activityMap)
-	this.TimelimeStorage.Set(this.GetId(),ids)
-	this.CounterStorage.Incr(this.GetId(),uint64(len(ids)))
+	this.TimelimeStorage.Set(String(this.GetId()),ids)
+	this.CounterStorage.Incr(String(this.GetId()),uint64(len(ids)))
 }
 
 func (this BaseFeed) RemoveActivity(activity activity.Activable){
-	key:=strconv.Itoa(int(activity.GetId()))
+	key:=String(strconv.Itoa(int(activity.GetId())))
 	this.ActivityStorage.Delete(key)
-	this.TimelimeStorage.DeleteItem(this.GetId(),activity.GetId())
-	this.CounterStorage.Decr(this.GetId(),1)
+	this.TimelimeStorage.DeleteItem(String(this.GetId()),activity.GetId())
+	this.CounterStorage.Decr(String(this.GetId()),1)
 }
 
 func (this BaseFeed) RemoveActivities(activities []activity.Activable){
@@ -63,13 +63,13 @@ func (this BaseFeed) RemoveActivities(activities []activity.Activable){
 }
 
 func (this BaseFeed) GetActivities(sinceId ,maxId uint64,page ,count int)[]activity.Activable{
-	ids,err:=this.TimelimeStorage.Getlimit(this.GetId(),sinceId,maxId,page,count)
+	ids,err:=this.TimelimeStorage.Getlimit(String(this.GetId()),sinceId,maxId,page,count)
 	if err!=nil{
 		return nil
 	}
-	var keys []interface{}
+	var keys []Key
 	for _,id :=range(ids.(IntReversedSlice)){
-		keys=append(keys,strconv.Itoa(id))
+		keys=append(keys,String(strconv.Itoa(id)))
 	}
 	values,err:=this.ActivityStorage.MultiGet(keys)
 	result:=make([]activity.Activable,len(values))
@@ -82,7 +82,7 @@ func (this BaseFeed) GetActivities(sinceId ,maxId uint64,page ,count int)[]activ
 }
 
 func (this BaseFeed) GetActivityIds(sinceId ,maxId uint64,page ,count int)[]uint64{
-	ids,err:=this.TimelimeStorage.Getlimit(this.GetId(),sinceId,maxId,page,count)
+	ids,err:=this.TimelimeStorage.Getlimit(String(this.GetId()),sinceId,maxId,page,count)
 	if err!=nil{
 		return nil
 	}
@@ -94,9 +94,9 @@ func (this BaseFeed) GetActivityIds(sinceId ,maxId uint64,page ,count int)[]uint
 }
 
 func (this BaseFeed) MultiGet(ids []uint64)[]activity.Activable{
-	var keys []interface{}
+	var keys []Key
 	for _,id :=range ids {
-		keys=append(keys,strconv.Itoa(int(id)))
+		keys=append(keys,String(strconv.Itoa(int(id))))
 	}
 	values,err:=this.ActivityStorage.MultiGet(keys)
 	if err!=nil{
@@ -112,7 +112,7 @@ func (this BaseFeed) MultiGet(ids []uint64)[]activity.Activable{
 }
 
 func (this BaseFeed) GetCount()int{
-	count,err:=this.CounterStorage.Get(this.GetId())
+	count,err:=this.CounterStorage.Get(String(this.GetId()))
 	if err!=nil{
 		return 0
 	}

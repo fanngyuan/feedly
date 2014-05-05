@@ -93,21 +93,21 @@ func (this AggregatorFeed) GetFollowing(userId uint64,sinceId,maxId uint64,page,
 	return this.RenderUsers(uids)
 }
 
-func (this AggregatorFeed) GetFollowingIds(userId uint64,sinceId,maxId uint64,page,count int)[]interface{}{
+func (this AggregatorFeed) GetFollowingIds(userId uint64,sinceId,maxId uint64,page,count int)[]mcstorage.Key{
 	userFeed,ok:=this.UserFeedMap[userId]
 	if !ok{
 		userFeed=this.ActivityInit.InitUserFeed(userId)
 		this.UserFeedMap[userId]=userFeed
 	}
 	following:=userFeed.GetFollowing(sinceId,maxId,page,count)
-	uids:=make([]interface{},len(following))
+	uids:=make([]mcstorage.Key,len(following))
 	for index,uid := range following{
-		uids[index]=strconv.Itoa(int(uid.TargetId))
+		uids[index]=mcstorage.String(strconv.Itoa(int(uid.TargetId)))
 	}
 	return uids
 }
 
-func (this AggregatorFeed) RenderUsers(uids []interface{})[]User{
+func (this AggregatorFeed) RenderUsers(uids []mcstorage.Key)[]User{
 	userMap,err:=this.UserStorage.MultiGet(uids)
 	if err!=nil{
 		return nil
@@ -129,9 +129,9 @@ func (this AggregatorFeed) GetFollower(userId uint64,sinceId,maxId uint64,page,c
 		this.UserFeedMap[userId]=userFeed
 	}
 	followers:=userFeed.GetFollower(sinceId,maxId,page,count)
-	uids:=make([]interface{},len(followers))
+	uids:=make([]mcstorage.Key,len(followers))
 	for index,uid := range followers{
-		uids[index]=strconv.Itoa(int(uid.UserId))
+		uids[index]=mcstorage.String(strconv.Itoa(int(uid.UserId)))
 	}
 	return this.RenderUsers(uids)
 }
@@ -153,7 +153,7 @@ func (this PullAgrregatorFeed) GetFriendsTimeline(userId uint64,activityType str
 	}
 	followingIds:=make([]uint64,len(uids))
 	for i,uid :=range uids{
-		followingId,err:=strconv.Atoi(uid.(string))
+		followingId,err:=strconv.Atoi(uid.ToString())
 		if err!=nil{
 			continue
 		}
@@ -202,7 +202,7 @@ func (this PullAgrregatorFeed) GetHomeTimeline(userId uint64,activityType string
 	}
 	followingIds:=make([]uint64,len(uids)+1)
 	for i,uid :=range uids{
-		followingId,err:=strconv.Atoi(uid.(string))
+		followingId,err:=strconv.Atoi(uid.ToString())
 		if err!=nil{
 			continue
 		}
